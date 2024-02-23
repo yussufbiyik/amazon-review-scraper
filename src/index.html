@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Amazon Product Review Scraper</title>
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="index.css">
+    <link rel="stylesheet" href="https://unpkg.com/axist@latest/dist/axist.min.css" />
+</head>
+<body style="margin: 0;">
+  <div id="loader" class="hidden">
+    <div class="lds-ring"><div></div><div></div><div></div><div></div></div>
+  </div>
+  <div id="content">
+      <label for="product-handle-input">Enter Details:</label>
+      <input type="text" placeholder="Your Product Handle" id="product-handle-input" name="product-handle-input">
+      <input type="text" placeholder="Product ID" id="product-id-input">
+      <button id="scrape-request-send-button">Scrape Reviews</button>
+      <div class="options">
+        <fieldset>
+          <div>
+              <label for="review-number-input">Review Count:</label>
+              <input type="number" name="review-number-input" placeholder="Maximum 300" id="review-number-input" max="300" value="300">
+          </div>
+          <div>
+              <label for="review-stars-min">Minimum Stars:</label>
+              <input type="number" name="review-stars-min" id="review-stars-min" min="1" max="5" value="1">
+              <label for="review-stars-max">Maximum Stars:</label>
+              <input type="number" name="review-stars-max" id="review-stars-max" min="1" max="5" value="5">
+          </div>
+      </fieldset>
+      <fieldset>
+          <div>
+              <label for="page-number">Starting Page (0 is All Pages):</label>
+              <input type="number" name="page-number" id="page-number-input" placeholder="Page Number" value="0">
+          </div>
+          <div>
+            <label for="output-format">Output Format:</label>
+            <select name="output-format" id="output-format">
+              <option value="shopify-reviews-app" selected>Shopify Reviews App</option>
+              <option value="raw">Raw</option>
+            </select>
+          </div>
+      </fieldset>
+      </div>
+      <div class="hidden" id="devButtons">
+        <button onclick="toggleLoadingAnimation()" id="loader-button">Toggle Loader</button>
+      </div>
+  </div>
+  <script>
+    const electron = require("electron");
+    const { ipcRenderer, dialog } = electron;
+
+    const productInput = document.getElementById("product-id-input");
+    const productHandleInput = document.getElementById("product-handle-input");
+    const scrapeRequestSendButton = document.getElementById("scrape-request-send-button");
+    const reviewCountInput = document.getElementById("review-number-input");
+    const minStarInput = document.getElementById("review-stars-min");
+    const maxStarInput = document.getElementById("review-stars-max");
+    const pageCountInput = document.getElementById("page-number-input");
+    const outputFormatInput = document.getElementById("output-format");
+
+    function toggleLoadingAnimation() {
+      document.getElementById("loader").classList.toggle("hidden")
+    }
+
+    scrapeRequestSendButton.addEventListener("click", () => {
+      const productHandle = productHandleInput.value;
+      const product = productInput.value;
+      const reviewCount = reviewCountInput.value;
+      const minStars = minStarInput.value;
+      const maxStars = maxStarInput.value;
+      const pageCount = pageCountInput.value;
+      const outputFormat = Array.from(outputFormatInput.options).find(option => option.selected === true).value;
+
+      const options = {productHandle, product,reviewCount,minStars,maxStars,pageCount,outputFormat}
+      ipcRenderer.send("scrape-request", options)
+      toggleLoadingAnimation()
+    })
+    ipcRenderer.on("finish-load-animation", () => {
+      toggleLoadingAnimation()
+    })
+  </script>
+</body>
+</html>
